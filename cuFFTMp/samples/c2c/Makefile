@@ -15,4 +15,4 @@ $(exe): $(exe).cu
 build: $(exe)
 
 run: $(exe)
-	LD_LIBRARY_PATH="${NVSHMEM_LIB}:${CUFFT_LIB}:${LD_LIBRARY_PATH}" mpirun -oversubscribe -n 2 $(exe)
+	LD_LIBRARY_PATH="${NVSHMEM_LIB}:${CUFFT_LIB}:${LD_LIBRARY_PATH}" mpirun -oversubscribe -n 4 -N 4 $(exe)

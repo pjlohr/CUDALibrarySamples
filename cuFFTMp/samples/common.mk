@@ -7,7 +7,7 @@ CUFFT_INC   ?= ../../cufft/include/
 ARCH        ?= $(shell uname -m)
 ifeq ($(ARCH), ppc64le)
 MPI         ?= mpi_ibm
-else
+elsewhich
 MPI         ?= mpi
 endif
 CXXFLAGS = -std=c++17 --generate-code arch=compute_70,code=sm_70 --generate-code arch=compute_80,code=sm_80 --generate-code arch=compute_90,code=sm_90

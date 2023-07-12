@@ -13,6 +13,7 @@
 #include "../common/generate_random.hpp"
 #include "../iterators/box_iterator.hpp"
 
+#include <chrono>
 /**
  * This samples illustrates a basic use of cuFFTMp using the built-in, optimized, data distributions.
  * 
@@ -59,6 +60,7 @@ void run_c2c_fwd_inv(size_t nx, size_t ny, size_t nz, std::complex<float>* cpu_d
     // Allocate memory, copy CPU data to GPU
     // Data is distributed as X-Slabs
     cudaLibXtDesc *desc;
+
     CUFFT_CHECK(cufftXtMalloc(plan, &desc, CUFFT_XT_FORMAT_INPLACE));
     CUFFT_CHECK(cufftXtMemcpy(plan, (void*)desc, (void*)cpu_data, CUFFT_COPY_HOST_TO_DEVICE));
 
@@ -81,10 +83,10 @@ void run_c2c_fwd_inv(size_t nx, size_t ny, size_t nz, std::complex<float>* cpu_d
     // Data is distributed as X-Slabs again
     CUDA_CHECK(cudaStreamSynchronize(stream));
     CUFFT_CHECK(cufftXtMemcpy(plan, (void*)cpu_data, (void*)desc, CUFFT_COPY_DEVICE_TO_HOST));
+
+
     CUFFT_CHECK(cufftXtFree(desc));
-
     CUFFT_CHECK(cufftDestroy(plan));
-
     CUDA_CHECK(cudaStreamDestroy(stream));
 };
 
@@ -119,9 +121,20 @@ int main(int argc, char** argv) {
     generate_random(data, rank);
     std::vector<std::complex<float>> ref = data;
 
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     // Run Forward and Inverse FFT
     run_c2c_fwd_inv(nx, ny, nz, data.data(), rank, size, MPI_COMM_WORLD);
 
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    // auto duration = duration_cast<nanoseconds>(stop - start);
+    // printf("Copy-fFFT-rFFT-cCopy time: %f\n", duration.count());
+
+    std::cout << "f() took "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count()
+              << " milliseconds\n";
     // Compute error
     double error = compute_error(ref, data, buildBox3D(CUFFT_XT_FORMAT_INPLACE, CUFFT_C2C, rank, size, nx, ny, nz));
 
